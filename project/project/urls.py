@@ -8,4 +8,3 @@ urlpatterns = [
     # path('pages/', include('django.contrib.flatpages.urls')),
     path('products/', include('simpleapp.urls')),
 ]
-#yandex pas: skTest11tt pass test_BlS4812s
