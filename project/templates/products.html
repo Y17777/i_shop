@@ -13,18 +13,8 @@ Products
 <!--    <h3> {{ next_sale|default_if_none:"Чуть позже сообщим о распродаже!" }} </h3>-->
     <form action="" method="get">
        {# Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями #}
-        {{filterset.form.non_field_errors}}
-
-        {{filterset.form.name__icontains.errors}}
-        <label for="{{filterset.form.name__icontains.id_for_label}}">Поиск</label>
-        <input
-        id="{{ filterset.form.name__icontains.id }}"
-        name="{{ filterset.form.name__icontains.name }}"
-        value="{{ filterset.form.name__icontains.value }}"
-        class="form-control"
-    >
-       {# Добавим кнопку отправки данных формы #}
-       <input type="submit" value="Найти" />
+        {{filterset.form.as_p}}
+        <input type="submit" value="Найти" />
    </form>
 
     <hr>
@@ -36,44 +26,50 @@ Products
                <th>Категория</th>
                <th>Цена</th>
                <th>Количество</th>
-               <th>Редактирование</th>
-               <th>Удаление</th>
+               {# Условие получается составным. #}
+                {% if perms.simpleapp.change_product or perms.simpleapp.delete_product %}
+                <th>Действия</th>
+                {% endif %}
            </tr>
            {% for product in products %}
-           <tr>
-               <td>{{ product.name }}</td>
-               <td>{{ product.description|truncatechars:15 }}</td>
-               <td>{{ product.category.name }}</td>
-               <td>{{ product.price|currency:"rub" }}</td>
-               <td>{{ product.quantity }}</td>
-               <td><a href="{% url 'product_update' product.pk %}">Редактировать</a></td>
-               <td><a href="{% url 'product_delete' product.pk %}">Удалить</a></td>
-           </tr>
-           {% endfor %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.description|truncatechars:15 }}</td>
+                <td>{{ product.category.name }}</td>
+                <td>{{ product.price|currency }}</td>
+                <td>{{ product.quantity }}</td>
+
+                <td>
+                    {# А здесь доступ для каждой ссылки теперь будем проверять отдельно #}
+                    {% if perms.simpleapp.change_product %}
+                    <a href="{% url 'product_update' pk=product.id %}">Изменить</a>
+                    {% endif %}
+                    {% if perms.simpleapp.delete_product %}
+                    <a href="{% url 'product_delete' product.id %}">Удалить</a>
+                    {% endif %}
+                </td>
+
+            </tr>
+            {% endfor %}
 
        </table>
     {% else %}
         <h2>Товаров нет!</h2>
     {% endif %}
 
-    {# Добавляем пагинацию на страницу #}
-
-   {# Информация о предыдущих страницах #}
-   {% if page_obj.has_previous %}
+     {% if page_obj.has_previous %}
        <a href="?{% url_replace page=1 %}">1</a>
        {% if page_obj.previous_page_number != 1 %}
            ...
            <a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
        {% endif %}
-   {% endif %}
+     {% endif %}
 
-   {# Информация о текущей странице #}
-   {{ page_obj.number }}
+     {{ page_obj.number }}
 
-   {# Информация о следующих страницах #}
-   {% if page_obj.has_next %}
+     {% if page_obj.has_next %}
        <a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
-       {% if paginator.num_pages != page_obj.next_page_number %}
+     {% if paginator.num_pages != page_obj.next_page_number %}
            ...
            <a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
        {% endif %}
